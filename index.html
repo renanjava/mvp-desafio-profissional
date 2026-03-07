@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desafio Profissional — Orçamento Industrial & Análise Contábil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo">🏭</div>
+      <div>
+        <h1 class="brand-name">Desafio Profissional</h1>
+        <p class="brand-tagline">Orçamento Industrial & Análise Contábil</p>
+      </div>
+    </div>
+    <div class="header-info">
+      <span id="headerEquipName" class="equip-badge">Nenhum produto definido</span>
+    </div>
+  </header>
+  <div class="stepper-bar">
+    <div class="stepper-track">
+      <div class="step-item active" data-step="1" id="stepBtn1">
+        <div class="step-circle">1</div>
+        <span class="step-label">Produto</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" data-step="2" id="stepBtn2">
+        <div class="step-circle">2</div>
+        <span class="step-label">Materiais & BOM</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" data-step="3" id="stepBtn3">
+        <div class="step-circle">3</div>
+        <span class="step-label">Fabricação</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" data-step="4" id="stepBtn4">
+        <div class="step-circle">4</div>
+        <span class="step-label">Simulação de Venda</span>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step-item" data-step="5" id="stepBtn5">
+        <div class="step-circle">5</div>
+        <span class="step-label">Relatório</span>
+      </div>
+    </div>
+  </div>
+  <main class="app-main">
+    <section id="step1" class="step-section active">
+      <div class="step-hero">
+        <div class="step-number-big">01</div>
+        <div>
+          <h2>Defina o Produto que Você Fabrica</h2>
+          <p class="text-muted">Escolha a família de equipamento e configure as informações iniciais da produção.</p>
+        </div>
+      </div>
+      <div class="row-cols mt-5">
+        <div class="col-main">
+          <div class="section-label">FAMÍLIA DE EQUIPAMENTO</div>
+          <div class="product-grid">
+            <label class="product-card">
+              <input type="radio" name="equipamento" value="compressor" checked>
+              <div class="pc-inner">
+                <span class="pc-ico">💨</span>
+                <strong>Compressor de Ar Industrial</strong>
+                <p>Rotativo / Parafuso / Pistão — alta pressão</p>
+              </div>
+            </label>
+            <label class="product-card">
+              <input type="radio" name="equipamento" value="bomba">
+              <div class="pc-inner">
+                <span class="pc-ico">💧</span>
+                <strong>Bomba Hidráulica</strong>
+                <p>Centrífuga / Engrenagem — fluidos industriais</p>
+              </div>
+            </label>
+            <label class="product-card">
+              <input type="radio" name="equipamento" value="redutor">
+              <div class="pc-inner">
+                <span class="pc-ico">⚙️</span>
+                <strong>Redutor de Velocidade</strong>
+                <p>Caixa de engrenagens — transmissão de torque</p>
+              </div>
+            </label>
+            <label class="product-card">
+              <input type="radio" name="equipamento" value="trocador">
+              <div class="pc-inner">
+                <span class="pc-ico">🔁</span>
+                <strong>Trocador de Calor</strong>
+                <p>Casco e tubo / Placas — processos térmicos</p>
+              </div>
+            </label>
+            <label class="product-card">
+              <input type="radio" name="equipamento" value="estrutura">
+              <div class="pc-inner">
+                <span class="pc-ico">🏗️</span>
+                <strong>Estrutura Metálica</strong>
+                <p>Treliças, suportes, mezaninos industriais</p>
+              </div>
+            </label>
+            <label class="product-card">
+              <input type="radio" name="equipamento" value="robo">
+              <div class="pc-inner">
+                <span class="pc-ico">🦾</span>
+                <strong>Braço Robótico</strong>
+                <p>6 eixos, automação de processos</p>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="col-side">
+          <div class="info-card sticky-info">
+            <div class="section-label">CONFIGURAÇÃO DE PRODUÇÃO</div>
+            <div class="form-group mt-3">
+              <label>Nome do Produto / Modelo</label>
+              <input type="text" id="nomeModelo" placeholder="Ex: CP-50CV Parafuso">
+            </div>
+            <div class="form-group">
+              <label>Lote Mensal (unidades)</label>
+              <input type="number" id="loteMensal" value="30" min="1">
+              <small>Usado para rateio dos custos fixos e ponto de equilíbrio.</small>
+            </div>
+            <div class="form-group">
+              <label>Nível de Complexidade do Produto</label>
+              <select id="complexidade">
+                <option value="1">Simples / Linha Padrão</option>
+                <option value="1.6" selected>Médio / Customizável</option>
+                <option value="2.8">Alto / Projeto Especial (P&D)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Dimensões: Altura × Largura × Prof. (cm)</label>
+              <div class="dim-row">
+                <input type="number" id="dimH" value="80" min="1" placeholder="Alt.">
+                <span>×</span>
+                <input type="number" id="dimL" value="50" min="1" placeholder="Larg.">
+                <span>×</span>
+                <input type="number" id="dimP" value="45" min="1" placeholder="Prof.">
+              </div>
+              <small id="volDisplay">Volume: 0,18 m³ — Peso estimado: 0 kg</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-actions">
+        <button class="btn-next" onclick="goToStep(2)">
+          Próximo: Materiais & BOM <span class="btn-arr">→</span>
+        </button>
+      </div>
+    </section>
+    <section id="step2" class="step-section">
+      <div class="step-hero">
+        <div class="step-number-big">02</div>
+        <div>
+          <h2>Bill of Materials (BOM) — Lista de Materiais</h2>
+          <p class="text-muted">Adicione os componentes do equipamento. Cada item impacta o custo de fabricação e os créditos tributários.</p>
+        </div>
+      </div>
+      <div class="card mt-5">
+        <div class="card-top">
+          <div>
+            <h3>Componentes do Produto</h3>
+            <p class="text-muted">Cadastre peças, conjuntos e matérias-primas. A origem (nacional/importado) impacta no ICMS e PIS/COFINS.</p>
+          </div>
+          <button class="btn-outline-primary" id="btnAddItem">＋ Adicionar componente</button>
+        </div>
+        <div class="table-wrap mt-4">
+          <table id="bomTable">
+            <thead>
+              <tr>
+                <th>Tipo de Componente</th>
+                <th>Especificação</th>
+                <th>Material / Liga</th>
+                <th>Origem</th>
+                <th>Qtd.</th>
+                <th>Peso/un (kg)</th>
+                <th>Custo Unit. (R$)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="bomBody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5"></td>
+                <td class="ft-label">Total kg:</td>
+                <td class="ft-val" id="totalPeso">0 kg</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td colspan="5"></td>
+                <td class="ft-label">Custo Total Materiais:</td>
+                <td class="ft-val text-accent" id="totalMat">R$ 0,00</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="step-actions">
+        <button class="btn-back" onclick="goToStep(1)">← Voltar</button>
+        <button class="btn-next" onclick="goToStep(3)">
+          Próximo: Custos de Fabricação <span class="btn-arr">→</span>
+        </button>
+      </div>
+    </section>
+    <section id="step3" class="step-section">
+      <div class="step-hero">
+        <div class="step-number-big">03</div>
+        <div>
+          <h2>Custos de Fabricação — MOD e CIF</h2>
+          <p class="text-muted">Informe os tempos de processo e custos fabris mensais. O sistema rateará os custos fixos pelo lote definido.</p>
+        </div>
+      </div>
+      <div class="two-cols mt-5">
+        <div class="card">
+          <h3>🧑‍🔧 Mão de Obra Direta (MOD)</h3>
+          <p class="text-muted mt-1">Horas padrão de produção por unidade fabricada em cada setor.</p>
+          <div class="cost-row mt-4">
+            <div class="cost-info">
+              <strong>Usinagem / CNC</strong>
+              <small>R$ 45/h + 65% encargos = R$ 74,25/h efetivo</small>
+            </div>
+            <div class="cost-input">
+              <input type="number" id="modUsinagem" value="12" step="0.5" min="0">
+              <span>h/un</span>
+            </div>
+            <div class="cost-result" id="resUsinagem">—</div>
+          </div>
+          <div class="cost-row">
+            <div class="cost-info">
+              <strong>Soldagem & Caldeiraria</strong>
+              <small>R$ 55/h + 65% encargos = R$ 90,75/h efetivo</small>
+            </div>
+            <div class="cost-input">
+              <input type="number" id="modSolda" value="8" step="0.5" min="0">
+              <span>h/un</span>
+            </div>
+            <div class="cost-result" id="resSolda">—</div>
+          </div>
+          <div class="cost-row">
+            <div class="cost-info">
+              <strong>Montagem & Testes</strong>
+              <small>R$ 35/h + 65% encargos = R$ 57,75/h efetivo</small>
+            </div>
+            <div class="cost-input">
+              <input type="number" id="modMontagem" value="10" step="0.5" min="0">
+              <span>h/un</span>
+            </div>
+            <div class="cost-result" id="resMontagem">—</div>
+          </div>
+          <div class="subtotal-row mt-4">
+            <span>Total MOD / unidade:</span>
+            <span class="text-accent mono" id="totalMOD">R$ 0,00</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🏭 Custos Indiretos de Fabricação (CIF)</h3>
+          <p class="text-muted mt-1">Despesas mensais do chão de fábrica rateadas pelo lote de produção.</p>
+          <div class="form-group mt-4">
+            <label>Depreciação de Máquinas e Equipamentos (R$/mês)</label>
+            <input type="number" id="cifDepr" value="15000">
+            <small>Método: Linear. Ex: Torno CNC R$300k vida útil 20 anos = R$1.250/mês.</small>
+          </div>
+          <div class="form-group">
+            <label>Energia Elétrica Fabril (R$/mês)</label>
+            <input type="number" id="cifEnergia" value="8500">
+          </div>
+          <div class="form-group">
+            <label>Manutenção Preventiva + Seguros (R$/mês)</label>
+            <input type="number" id="cifManut" value="4000">
+          </div>
+          <div class="form-group">
+            <label>Outros (Ferramental, EPI, EPAs, etc.) (R$/mês)</label>
+            <input type="number" id="cifOutros" value="2500">
+          </div>
+          <div class="subtotal-row mt-3">
+            <span>CIF Rateado / unidade:</span>
+            <span class="text-accent mono" id="cifRateado">R$ 0,00</span>
+          </div>
+          <div class="info-box mt-3">
+            <strong>📋 Critério:</strong> Custeio por Absorção Total (rateio por volume de unidades produzidas/mês), conforme NBC TG 16 – Estoques.
+          </div>
+        </div>
+      </div>
+      <div class="cpv-preview mt-4">
+        <div class="cpv-title">Resumo do Custo de Produção (CPV) por Unidade</div>
+        <div class="cpv-blocks">
+          <div class="cpv-block">
+            <span class="cpv-label">Materiais (BOM)<br><small>Matéria-Prima</small></span>
+            <span class="cpv-val mono" id="pvMat">R$ 0,00</span>
+          </div>
+          <span class="cpv-plus">+</span>
+          <div class="cpv-block">
+            <span class="cpv-label">Mão de Obra Direta<br><small>MOD com encargos</small></span>
+            <span class="cpv-val mono" id="pvMod">R$ 0,00</span>
+          </div>
+          <span class="cpv-plus">+</span>
+          <div class="cpv-block">
+            <span class="cpv-label">Custos Indiretos<br><small>CIF Rateado</small></span>
+            <span class="cpv-val mono" id="pvCif">R$ 0,00</span>
+          </div>
+          <span class="cpv-plus">=</span>
+          <div class="cpv-block cpv-total">
+            <span class="cpv-label">Custo Industrial<br><small>CPV / Unidade</small></span>
+            <span class="cpv-val mono" id="pvTotal">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+      <div class="step-actions">
+        <button class="btn-back" onclick="goToStep(2)">← Voltar</button>
+        <button class="btn-next" onclick="goToStep(4)">
+          Próximo: Simulação de Venda <span class="btn-arr">→</span>
+        </button>
+      </div>
+    </section>
+    <section id="step4" class="step-section">
+      <div class="step-hero">
+        <div class="step-number-big">04</div>
+        <div>
+          <h2>Simulação de Preço e Venda</h2>
+          <p class="text-muted">Configure preço de venda, regime tributário e destino. O sistema calcula automaticamente o markup e a viabilidade.</p>
+        </div>
+      </div>
+      <div class="sim-layout mt-5">
+        <div class="sim-configs">
+          <div class="card mb-4">
+            <h3>💰 Formação de Preço</h3>
+            <div class="form-group mt-4">
+              <label>Preço de Venda pretendido por unidade (R$)</label>
+              <input type="number" id="precoVenda" value="45000" min="0" step="500" oninput="atualizarSimulador()">
+            </div>
+            <div class="form-group">
+              <label>Margem de Lucro Desejada (%)</label>
+              <div class="range-wrap">
+                <input type="range" id="margemSlider" min="0" max="70" value="25" oninput="atualizarSimulador(); document.getElementById('margemVal').textContent = this.value + '%'">
+                <output id="margemVal">25%</output>
+              </div>
+              <small>O sistema também sugerirá o preço necessário para atingir essa margem.</small>
+            </div>
+          </div>
+          <div class="card mb-4">
+            <h3>⚖️ Regime e Tributação</h3>
+            <div class="form-group mt-4">
+              <label>Regime Tributário da Empresa</label>
+              <select id="regime" onchange="atualizarHintRegime(); atualizarSimulador()">
+                <option value="lucro_real" selected>Lucro Real (PIS: 1,65% / COFINS: 7,6% — Não Cumulativo)</option>
+                <option value="lucro_presumido">Lucro Presumido (PIS: 0,65% / COFINS: 3% — Cumulativo)</option>
+              </select>
+              <div class="tax-hint mt-2" id="hintRegime">
+                <strong>Lucro Real:</strong> Empresa pode aproveitar créditos de PIS/COFINS e ICMS sobre compras. IRPJ/CSLL apurado sobre o lucro real (34%).
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Destino da Venda</label>
+              <select id="destino" onchange="atualizarHintDestino(); atualizarSimulador()">
+                <option value="sp" selected>Mercado Interno — São Paulo (ICMS 18%)</option>
+                <option value="inter">Mercado Interno — Interestadual (ICMS 12%)</option>
+                <option value="export">Exportação ao Exterior</option>
+              </select>
+              <div class="tax-hint mt-2" id="hintDestino">
+                Venda interna SP: ICMS 18% incidente sobre NF. IPI de 5% destacado na nota não integra receita bruta.
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>📦 Despesas Comerciais</h3>
+            <div class="form-group mt-4">
+              <label>Comissão de Vendas (%)</label>
+              <input type="number" id="txComissao" value="3" step="0.5" min="0" oninput="atualizarSimulador()">
+            </div>
+            <div class="form-group">
+              <label>Despesas Admin. Fixas / mês (R$)</label>
+              <input type="number" id="despAdmin" value="25000" oninput="atualizarSimulador()">
+              <small>Será rateada por unidade vendida no mês.</small>
+            </div>
+            <div class="form-group">
+              <label>Frete / Logística Exportação por unidade (R$)</label>
+              <input type="number" id="freteEx" value="0" oninput="atualizarSimulador()">
+              <small>Preencher somente se destino = Exportação.</small>
+            </div>
+          </div>
+        </div>
+        <div class="sim-result">
+          <div class="resultado-live card">
+            <div class="rl-header">
+              <h3>📊 Painel de Resultado ao Vivo</h3>
+              <small class="text-muted">Atualizado automaticamente</small>
+            </div>
+            <div class="rl-grupo mt-4">
+              <div class="rl-label">Custo Industrial (CPV)</div>
+              <div class="rl-val mono" id="rlCPV">R$ 0,00</div>
+            </div>
+            <div class="rl-grupo">
+              <div class="rl-label">Impostos sobre Vendas (ICMS + PIS/COF)</div>
+              <div class="rl-val mono text-orange" id="rlImpostosV">R$ 0,00</div>
+            </div>
+            <div class="rl-grupo">
+              <div class="rl-label">Despesas Comerciais + Adm</div>
+              <div class="rl-val mono text-orange" id="rlDespOp">R$ 0,00</div>
+            </div>
+            <hr class="sep">
+            <div class="rl-grupo">
+              <div class="rl-label">Custo Total por Unidade</div>
+              <div class="rl-val mono" id="rlCustoTotal">R$ 0,00</div>
+            </div>
+            <div class="rl-grupo">
+              <div class="rl-label">Preço de Venda Praticado</div>
+              <div class="rl-val mono large" id="rlPreco">R$ 0,00</div>
+            </div>
+            <hr class="sep">
+            <div class="rl-grupo">
+              <div class="rl-label">IRPJ + CSLL (Provisão)</div>
+              <div class="rl-val mono text-orange" id="rlIR">R$ 0,00</div>
+            </div>
+            <div class="rl-grupo highlight-result">
+              <div class="rl-label"><strong>Lucro Líquido por Unidade</strong></div>
+              <div class="rl-val mono large" id="rlLucro">R$ 0,00</div>
+            </div>
+            <div class="rl-grupo">
+              <div class="rl-label">Margem Líquida Real</div>
+              <div class="rl-val mono" id="rlMargem">—</div>
+            </div>
+            <div class="viab-box mt-4" id="viabBox">
+              <span class="viab-ico">⏳</span>
+              <div>Aguardando simulação…</div>
+            </div>
+            <hr class="sep mt-4">
+            <div class="sugestao-preco">
+              <div class="sp-text">💡 Para atingir margem de <span id="spMargemRef">25</span>%, o preço sugerido é:</div>
+              <div class="sp-preco" id="spPreco">—</div>
+            </div>
+            <div class="pe-box mt-4">
+              <div class="pe-label">📉 Ponto de Equilíbrio Contábil (PEC)</div>
+              <div class="pe-val" id="rlPEC">— unidades/mês</div>
+              <small class="text-muted">Mínimo de unidades para cobrir todos os custos fixos.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-actions">
+        <button class="btn-back" onclick="goToStep(3)">← Voltar</button>
+        <button class="btn-next btn-report" onclick="goToStep(5)">
+          📄 Gerar Relatório Contábil Completo <span class="btn-arr">→</span>
+        </button>
+      </div>
+    </section>
+    <section id="step5" class="step-section">
+      <div class="step-hero no-print">
+        <div class="step-number-big">05</div>
+        <div>
+          <h2>Relatório Contábil e de Engenharia</h2>
+          <p class="text-muted">Visão executiva e detalhamento técnico de custos e tributações.</p>
+        </div>
+      </div>
+      <div class="report-toolbar no-print mt-3 mb-4">
+        <button class="btn-back" onclick="goToStep(4)">← Editar Simulação</button>
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimir Detalhamento</button>
+      </div>
+      <div class="relatorio-dark" id="relatorioConteudo">
+        
+        <div class="rel-header-dark">
+          <div class="rh-title">
+            <span class="rh-logo">🏭</span>
+            <div>
+              <h2>Desafio Profissional</h2>
+              <p class="rh-sub">Análise de Custos e Viabilidade</p>
+            </div>
+          </div>
+          <div class="rh-meta">
+            <div><span class="text-muted">Produto:</span> <strong id="relNomeProd">—</strong></div>
+            <div><span class="text-muted">Data:</span> <strong id="relData">—</strong></div>
+          </div>
+        </div>
+        <div class="exec-summary-dark mt-5">
+          <h3 class="section-badge">🎯 Sumário Executivo</h3>
+          <div class="exec-cards mt-3">
+            <div class="ecard bg-primary">
+              <span class="ecard-lbl">Lucro Líquido Unitário</span>
+              <strong class="ecard-val" id="exec_lucro">R$ 0,00</strong>
+              <small class="ecard-desc" id="exec_margem">Margem: 0%</small>
+            </div>
+            <div class="ecard bg-darker">
+              <span class="ecard-lbl">Custo Total Unitário</span>
+              <strong class="ecard-val" id="exec_custo">R$ 0,00</strong>
+              <small class="ecard-desc">Inclui CPV, Impostos e Despesas</small>
+            </div>
+            <div class="ecard bg-darker">
+              <span class="ecard-lbl">Ponto de Equilíbrio</span>
+              <strong class="ecard-val" id="exec_pec">0 un</strong>
+              <small class="ecard-desc">Volume mínimo / mês</small>
+            </div>
+          </div>
+          <div class="exec-details mt-4">
+            <div class="ed-item"><span class="text-muted">Regime Tributário:</span> <strong id="relRegime" class="text-accent">—</strong></div>
+            <div class="ed-item"><span class="text-muted">Destino:</span> <strong id="relDestino">—</strong></div>
+            <div class="ed-item"><span class="text-muted">Lote Mensal:</span> <strong id="rA_lote">—</strong></div>
+            <div class="ed-item"><span class="text-muted">Custo de Materiais:</span> <strong id="exec_bom">—</strong></div>
+          </div>
+        </div>
+        <div class="detailed-report-dark mt-5">
+          <h3 class="section-badge">📋 Descritivo Detalhado: Custos e Tributações</h3>
+           
+          <div class="det-block mt-4">
+            <h4>1. DRE — Demonstração do Resultado (por Unidade)</h4>
+            <div class="table-wrap-dark mt-3">
+              <table class="dark-table">
+                <thead>
+                  <tr><th>Descrição</th><th class="text-right">Valor (R$)</th><th class="text-right">AV%</th></tr>
+                </thead>
+                <tbody id="dreTbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="det-block mt-5">
+            <h4>2. Bill of Materials (BOM) e Impostos S/ Insumos</h4>
+            <div class="table-wrap-dark mt-3">
+              <table class="dark-table" id="relBomTable">
+                <thead>
+                  <tr>
+                    <th>Componente / Material</th>
+                    <th>Origem</th>
+                    <th class="text-right">Peso (kg)</th>
+                    <th class="text-right">Custo Bruto (R$)</th>
+                    <th class="text-right">Créd. ICMS</th>
+                    <th class="text-right">Créd. PIS/COF</th>
+                  </tr>
+                </thead>
+                <tbody id="relBomBody"></tbody>
+                <tfoot>
+                  <tr class="tfoot-dark">
+                    <td colspan="2">TOTAIS MATERIAIS DIRETOS</td>
+                    <td class="text-right" id="relBomPesoT">—</td>
+                    <td class="text-right" id="relBomCustoT">—</td>
+                    <td class="text-right text-accent" id="relBomICMST">—</td>
+                    <td class="text-right text-accent" id="relBomPIST">—</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="info-dark mt-3" id="relNotaBOM">—</div>
+          </div>
+          <div class="twin-blocks mt-5">
+            <div class="det-block">
+              <h4>3. Notas Explicativas Tributárias</h4>
+              <div class="notas-list mt-3" id="notasGrid"></div>
+            </div>
+            <div class="det-block">
+              <h4>4. Resumo de Controladoria / CPV</h4>
+              <div class="kpi-list mt-3" id="indicadoresGrid"></div>
+            </div>
+          </div>
+        </div>
+        <div class="rel-rodape-dark mt-5">
+          <p>Desafio Profissional — Orçamento Industrial & Análise Contábil.</p>
+          <p class="text-muted mt-1">Valores simulados para fins educacionais e tomada de decisão gerencial.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <template id="tplBomRow">
+    <tr>
+      <td>
+        <select class="cinp comp-tipo">
+          <option value="motor">Motor / Acionamento</option>
+          <option value="carcaca">Carcaça / Corpo Principal</option>
+          <option value="eixo">Eixo / Árvore / Flanges</option>
+          <option value="rolamentos">Rolamentos / Mancais</option>
+          <option value="vedacao">Vedações / Selos / Gaxetas</option>
+          <option value="valvulas">Válvulas / Registros</option>
+          <option value="parafusos">Parafusos / Fixadores</option>
+          <option value="painel">Painel Elétrico / CLP / IHM</option>
+          <option value="tubulacao">Tubulação / Conexões</option>
+          <option value="outro">Outro Componente</option>
+        </select>
+      </td>
+      <td><input type="text" class="cinp spec" value="Standard" placeholder="Ex: 50HP Trifásico"></td>
+      <td>
+        <select class="cinp material">
+          <option value="aco_carbono">Aço Carbono SAE 1020</option>
+          <option value="fofo">Ferro Fundido GG25</option>
+          <option value="inox_304">Aço Inox AISI 304</option>
+          <option value="inox_316">Aço Inox 316L (Premiun)</option>
+          <option value="aluminio">Liga de Alumínio 6061</option>
+          <option value="cobre">Cobre / Latão</option>
+          <option value="polimero">Polímero / Borracha ABNT</option>
+          <option value="nylon">Nylon / Poliacetal</option>
+        </select>
+      </td>
+      <td>
+        <select class="cinp origem">
+          <option value="nacional">Nacional</option>
+          <option value="importado">Importado</option>
+        </select>
+      </td>
+      <td><input type="number" class="cinp qtd" value="1" min="1" step="1" style="width:56px"></td>
+      <td><input type="number" class="cinp peso" value="10" min="0.01" step="0.1" style="width:70px"></td>
+      <td class="val-custo mono text-accent val-align">R$ 0,00</td>
+      <td><button class="btn-rm">✕</button></td>
+    </tr>
+  </template>
+  <script src="app.js"></script>
+</body>
+</html>
