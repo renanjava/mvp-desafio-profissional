@@ -32,7 +32,9 @@
       <div class="login-credentials">
         <strong>Credenciais de demonstração:</strong><br>
         👤 Admin: <code>admin</code> / <code>admin123</code><br>
-        👤 Gestor: <code>gestor</code> / <code>gestor123</code>
+        👤 Gestor: <code>gestor</code> / <code>gestor123</code><br>
+        🏷️ Vendedor: <code>vendedor</code> / <code>vend123</code><br>
+        🛒 Comprador: <code>comprador</code> / <code>comp123</code>
       </div>
     </div>
   </div>
@@ -55,7 +57,10 @@
 
       <nav class="sidebar-nav">
         <div class="sidebar-section">Principal</div>
-        <div class="nav-item active" data-section="secDashboard">
+        <div class="nav-item active" data-section="secHome">
+          <span class="nav-ico">🏠</span> Home
+        </div>
+        <div class="nav-item" data-section="secDashboard">
           <span class="nav-ico">📊</span> Dashboard
         </div>
 
@@ -81,7 +86,15 @@
           <span class="nav-ico">📄</span> Relatórios
         </div>
 
+        <div class="sidebar-section">Tributação</div>
+        <div class="nav-item" data-section="secHistTributacao">
+          <span class="nav-ico">🌍</span> Hist. Tributação Exportação
+        </div>
+
         <div class="sidebar-section">Comercial</div>
+        <div class="nav-item" data-section="secMarketplace">
+          <span class="nav-ico">🛍️</span> Marketplace
+        </div>
         <div class="nav-item" data-section="secPosVenda">
           <span class="nav-ico">🤝</span> Pós-Venda
         </div>
@@ -114,8 +127,101 @@
 
       <div class="page-content">
 
+        <!-- ==================== HOME (VITRINE + RECOMENDAÇÕES) ==================== -->
+        <section id="secHome" class="page-section active">
+          <div class="page-hero">
+            <span class="page-hero-ico">🏠</span>
+            <div>
+              <h2>Bem-vindo ao SysTrack</h2>
+              <p class="text-muted">Vitrine de peças à venda, simulação de tributação e recomendações inteligentes.</p>
+            </div>
+          </div>
+
+          <!-- RECOMENDAÇÕES INTELIGENTES -->
+          <div class="home-recommendations mb-4" id="homeRecommendations">
+            <h3 class="section-label">💡 RECOMENDAÇÕES INTELIGENTES</h3>
+            <div class="reco-grid" id="recoGrid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- VITRINE DE PEÇAS À VENDA -->
+          <div class="card mb-4">
+            <div class="card-top">
+              <div>
+                <h3>🏷️ Vitrine — Peças e Produtos à Venda</h3>
+                <p class="text-muted">Explore os itens disponíveis e simule o custo de tributação antes de comprar.</p>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <select id="vitrineFilter" style="min-width:150px">
+                  <option value="todos">Todos os tipos</option>
+                  <option value="material">Materiais</option>
+                  <option value="componente">Componentes</option>
+                  <option value="produto">Produtos</option>
+                </select>
+              </div>
+            </div>
+            <div class="vitrine-grid mt-4" id="vitrineGrid">
+              <div class="empty-state"><span class="empty-ico">🏷️</span><p>Nenhum item publicado à venda ainda.</p></div>
+            </div>
+          </div>
+
+          <!-- SIMULAÇÃO RÁPIDA DE TRIBUTAÇÃO -->
+          <div class="card" id="simTribCard" style="display:none">
+            <h3>🧮 Simulação Rápida de Tributação</h3>
+            <p class="text-muted mt-1">Veja o custo com impostos do produto selecionado.</p>
+            <div class="sim-trib-content mt-4">
+              <div class="sim-trib-item" id="simTribItem">
+                <div class="sti-name" id="stiName">—</div>
+                <div class="sti-base" id="stiBase">Preço base: R$ 0,00</div>
+              </div>
+              <div class="form-row mt-3">
+                <div class="form-group">
+                  <label>Estado de Destino</label>
+                  <select id="simTribDestino">
+                    <option value="SP" selected>São Paulo (SP) — ICMS 18%</option>
+                    <option value="RJ">Rio de Janeiro (RJ) — ICMS 22%</option>
+                    <option value="MG">Minas Gerais (MG) — ICMS 18%</option>
+                    <option value="RS">Rio Grande do Sul (RS) — ICMS 17%</option>
+                    <option value="PR">Paraná (PR) — ICMS 19,5%</option>
+                    <option value="BA">Bahia (BA) — ICMS 20,5%</option>
+                    <option value="SC">Santa Catarina (SC) — ICMS 17%</option>
+                    <option value="EX">Exportação ao Exterior</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Regime Tributário</label>
+                  <select id="simTribRegime">
+                    <option value="lucro_real">Lucro Real</option>
+                    <option value="lucro_presumido">Lucro Presumido</option>
+                  </select>
+                </div>
+              </div>
+              <div class="trib-result-grid mt-3" id="tribResultGrid">
+                <div class="trib-result-card">
+                  <span class="trc-label">ICMS</span>
+                  <span class="trc-val" id="trICMS">R$ 0,00</span>
+                </div>
+                <div class="trib-result-card">
+                  <span class="trc-label">PIS/COFINS</span>
+                  <span class="trc-val" id="trPISCOF">R$ 0,00</span>
+                </div>
+                <div class="trib-result-card">
+                  <span class="trc-label">IPI (5%)</span>
+                  <span class="trc-val" id="trIPI">R$ 0,00</span>
+                </div>
+                <div class="trib-result-card total">
+                  <span class="trc-label">TOTAL COM TRIBUTOS</span>
+                  <span class="trc-val" id="trTotal">R$ 0,00</span>
+                </div>
+              </div>
+              <button class="btn btn-primary mt-3" id="btnComprarItem" style="display:none">🛒 Comprar este item</button>
+            </div>
+          </div>
+        </section>
+
         <!-- ==================== DASHBOARD (RF21, RF23) ==================== -->
-        <section id="secDashboard" class="page-section active">
+        <section id="secDashboard" class="page-section">
           <div class="page-hero">
             <span class="page-hero-ico">📊</span>
             <div>
@@ -834,6 +940,155 @@
             <div class="rel-rodape-dark mt-5">
               <p>SysTrack — Orçamento Industrial &amp; Análise Contábil.</p>
               <p class="text-muted mt-1">Valores simulados para fins educacionais e tomada de decisão gerencial.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== HISTÓRICO TRIBUTAÇÃO EXPORTAÇÃO ==================== -->
+        <section id="secHistTributacao" class="page-section">
+          <div class="page-hero">
+            <span class="page-hero-ico">🌍</span>
+            <div>
+              <h2>Histórico de Tributação de Exportação</h2>
+              <p class="text-muted">Registro completo de impostos e tributações calculadas para operações de exportação.</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-top">
+              <div>
+                <h3>📋 Registros de Tributação</h3>
+                <p class="text-muted">Simulações de exportação com detalhamento de impostos.</p>
+              </div>
+              <button class="btn btn-outline" id="btnExportTribCSV">📥 Exportar CSV</button>
+            </div>
+            <div class="data-table-wrap mt-4" id="tribHistTableWrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Destino</th>
+                    <th>Preço Base (R$)</th>
+                    <th>ICMS</th>
+                    <th>PIS/COFINS</th>
+                    <th>IPI</th>
+                    <th>Total com Tributos</th>
+                    <th>Regime</th>
+                  </tr>
+                </thead>
+                <tbody id="tribHistBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Resumo gráfico -->
+          <div class="dash-charts mt-4">
+            <div class="chart-card">
+              <h4>📊 Tributos por Destino</h4>
+              <canvas id="chartTribDestino"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>📈 Evolução dos Tributos</h4>
+              <canvas id="chartTribEvolucao"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== MARKETPLACE ==================== -->
+        <section id="secMarketplace" class="page-section">
+          <div class="page-hero">
+            <span class="page-hero-ico">🛍️</span>
+            <div>
+              <h2>Marketplace</h2>
+              <p class="text-muted">Compra e venda de materiais, componentes e produtos entre usuários.</p>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tabMktVender">🏷️ Publicar para Venda</button>
+            <button class="tab-btn" data-tab="tabMktComprar">🛒 Minhas Compras</button>
+            <button class="tab-btn" data-tab="tabMktMinhasVendas">💰 Minhas Vendas</button>
+          </div>
+
+          <!-- TAB: Publicar para Venda -->
+          <div id="tabMktVender" class="tab-panel active">
+            <div class="card">
+              <div class="card-top">
+                <div>
+                  <h3>Publicar Item para Venda</h3>
+                  <p class="text-muted">Publique materiais, componentes ou produtos para que outros possam comprar.</p>
+                </div>
+                <button class="btn btn-primary" id="btnPublicarItem">＋ Publicar Item</button>
+              </div>
+              <div class="data-table-wrap mt-4">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Nome</th>
+                      <th>Descrição</th>
+                      <th>Preço (R$)</th>
+                      <th>Status</th>
+                      <th style="text-align:right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mktMeusItensBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Minhas Compras -->
+          <div id="tabMktComprar" class="tab-panel">
+            <div class="card">
+              <div class="card-top">
+                <div>
+                  <h3>🛒 Minhas Compras</h3>
+                  <p class="text-muted">Itens que você adquiriu no marketplace.</p>
+                </div>
+              </div>
+              <div class="data-table-wrap mt-4">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Tipo</th>
+                      <th>Nome</th>
+                      <th>Vendedor</th>
+                      <th>Preço (R$)</th>
+                      <th>Tributação (R$)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mktMinhasComprasBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Minhas Vendas -->
+          <div id="tabMktMinhasVendas" class="tab-panel">
+            <div class="card">
+              <div class="card-top">
+                <div>
+                  <h3>💰 Minhas Vendas</h3>
+                  <p class="text-muted">Itens que você vendeu no marketplace.</p>
+                </div>
+              </div>
+              <div class="data-table-wrap mt-4">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Tipo</th>
+                      <th>Nome</th>
+                      <th>Comprador</th>
+                      <th>Preço (R$)</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mktMinhasVendasBody"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>

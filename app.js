@@ -10,7 +10,9 @@ const DB = {
 
 const USERS = [
   { login: 'admin', senha: 'admin123', nome: 'Administrador', role: 'admin' },
-  { login: 'gestor', senha: 'gestor123', nome: 'Gestor', role: 'gestor' }
+  { login: 'gestor', senha: 'gestor123', nome: 'Gestor', role: 'gestor' },
+  { login: 'vendedor', senha: 'vend123', nome: 'Vendedor', role: 'vendedor' },
+  { login: 'comprador', senha: 'comp123', nome: 'Comprador', role: 'comprador' }
 ];
 
 const ICMS_UF = {
@@ -76,9 +78,11 @@ function doLogin() {
   currentUser = user;
   $('loginOverlay').classList.add('hidden');
   $('appLayout').classList.remove('hidden');
+  const roleLabels = {admin:'Administrador',gestor:'Gestor',vendedor:'Vendedor',comprador:'Comprador'};
   $('userName').textContent = user.nome;
-  $('userRole').textContent = user.role === 'admin' ? 'Administrador' : 'Gestor';
+  $('userRole').textContent = roleLabels[user.role] || user.role;
   $('userAvatar').textContent = user.nome[0];
+  applyRoleVisibility(user.role);
   startSession();
   initApp();
 }
@@ -117,14 +121,18 @@ function showSection(secId) {
   const nav = document.querySelector(`.nav-item[data-section="${secId}"]`);
   if (nav) nav.classList.add('active');
   const titles = {
-    secDashboard:'Dashboard',secMateriais:'Materiais',secComponentes:'Componentes',
+    secHome:'Home',secDashboard:'Dashboard',secMateriais:'Materiais',secComponentes:'Componentes',
     secCustos:'Custos Operacionais',secProduto:'Configuração do Produto',
-    secSimulacao:'Simulação de Custos',secRelatorios:'Relatórios',secPosVenda:'Pós-Venda'
+    secSimulacao:'Simulação de Custos',secRelatorios:'Relatórios',secPosVenda:'Pós-Venda',
+    secHistTributacao:'Hist. Tributação Exportação',secMarketplace:'Marketplace'
   };
   setText('topBarTitle', titles[secId] || '');
   if (secId === 'secSimulacao') atualizarSimulador();
   if (secId === 'secRelatorios') gerarRelatorio();
   if (secId === 'secDashboard') refreshDashboard();
+  if (secId === 'secHome') refreshHome();
+  if (secId === 'secHistTributacao') renderTribHistory();
+  if (secId === 'secMarketplace') renderMarketplace();
   // close mobile sidebar
   $('sidebar').classList.remove('open');
   $('sidebarOverlay').classList.remove('open');
@@ -651,7 +659,530 @@ function initApp() {
   renderMateriais(); renderComponentes(); renderCustos(); renderVendas(); renderHistorico();
   atualizarCPVPreview(); atualizarHints();
   refreshDashboard();
+  refreshHome();
   // Update header badge
   const nomeEl=$('nomeModelo');
   if(nomeEl) nomeEl.addEventListener('input',()=>setText('headerEquipName',nomeEl.value||'Nenhum produto definido'));
 }
+
+/* ===== ROLE-BASED VISIBILITY ===== */
+function applyRoleVisibility(role) {
+  // Sections hidden per role
+  const vendedorSections = ['secHome','secDashboard','secMateriais','secComponentes','secProduto','secMarketplace','secPosVenda','secHistTributacao','secSimulacao','secRelatorios','secCustos'];
+  const compradorSections = ['secHome','secDashboard','secMarketplace','secHistTributacao'];
+  const adminSections = ['secHome','secDashboard','secMateriais','secComponentes','secCustos','secProduto','secSimulacao','secRelatorios','secHistTributacao','secMarketplace','secPosVenda'];
+  const gestorSections = adminSections;
+
+  const allowed = {
+    admin: adminSections,
+    gestor: gestorSections,
+    vendedor: vendedorSections,
+    comprador: compradorSections
+  }[role] || adminSections;
+
+  document.querySelectorAll('.nav-item[data-section]').forEach(nav => {
+    const sec = nav.dataset.section;
+    if (allowed.includes(sec)) {
+      nav.style.display = '';
+    } else {
+      nav.style.display = 'none';
+    }
+  });
+
+  // Show publish button only for vendedor and admin
+  const btnPubl = $('btnPublicarItem');
+  if(btnPubl) btnPubl.style.display = (role === 'vendedor' || role === 'admin' || role === 'gestor') ? '' : 'none';
+
+  // Show buy button only for comprador and admin
+  const btnComp = $('btnComprarItem');
+  if(btnComp) btnComp.style.display = (role === 'comprador' || role === 'admin') ? '' : 'none';
+}
+
+/* ===== HOME: VITRINE + RECOMENDAÇÕES ===== */
+let selectedVitrineItem = null;
+
+function refreshHome() {
+  renderVitrine();
+  renderRecommendations();
+}
+
+function renderVitrine() {
+  const filter = $('vitrineFilter')?.value || 'todos';
+  const marketplace = DB.get('marketplace').filter(i => i.status === 'disponivel');
+  const grid = $('vitrineGrid');
+  if (!grid) return;
+
+  let items = marketplace;
+  if (filter !== 'todos') items = items.filter(i => i.tipo === filter);
+
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty-state"><span class="empty-ico">🏷️</span><p>Nenhum item disponível nesta categoria.</p></div>';
+    return;
+  }
+
+  const tipoIcos = {material:'🧱',componente:'⚙️',produto:'📦'};
+  const tipoLabels = {material:'Material',componente:'Componente',produto:'Produto'};
+
+  grid.innerHTML = items.map(item => `
+    <div class="vitrine-card ${selectedVitrineItem?.id === item.id ? 'selected':''}"
+         onclick="selectVitrineItem('${item.id}')">
+      <div class="vc-type-badge">${tipoIcos[item.tipo]||'📦'} ${tipoLabels[item.tipo]||item.tipo}</div>
+      <div class="vc-name">${item.nome}</div>
+      <div class="vc-desc">${item.descricao || '—'}</div>
+      <div class="vc-price">${fmtBRL(item.preco)}</div>
+      <div class="vc-seller">Vendido por: <strong>${item.vendedor || '—'}</strong></div>
+      <button class="btn btn-sm btn-outline vc-sim-btn" onclick="event.stopPropagation();selectVitrineItem('${item.id}')">🧮 Simular Tributação</button>
+    </div>
+  `).join('');
+}
+
+window.selectVitrineItem = function(id) {
+  const items = DB.get('marketplace');
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+
+  selectedVitrineItem = item;
+  $('simTribCard').style.display = 'block';
+  $('stiName').textContent = `${item.nome} (${item.tipo})`;
+  $('stiBase').textContent = `Preço base: ${fmtBRL(item.preco)}`;
+
+  // Show buy button for comprador
+  if (currentUser && (currentUser.role === 'comprador' || currentUser.role === 'admin')) {
+    $('btnComprarItem').style.display = '';
+  }
+
+  calcTribSimulation();
+  renderVitrine();
+
+  $('simTribCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+
+function calcTribSimulation() {
+  if (!selectedVitrineItem) return;
+  const preco = selectedVitrineItem.preco;
+  const destino = $('simTribDestino')?.value || 'SP';
+  const regime = $('simTribRegime')?.value || 'lucro_real';
+
+  const icmsPct = destino === 'EX' ? 0 : (ICMS_UF[destino] || 0.18);
+  const pc = PIS_COFINS[regime];
+  const pcPct = destino === 'EX' ? 0 : pc.venda;
+  const ipiPct = IPI;
+
+  const icmsVal = preco * icmsPct;
+  const pcVal = preco * pcPct;
+  const ipiVal = preco * ipiPct;
+  const total = preco + icmsVal + pcVal + ipiVal;
+
+  setText('trICMS', fmtBRL(icmsVal));
+  setText('trPISCOF', fmtBRL(pcVal));
+  setText('trIPI', fmtBRL(ipiVal));
+  setText('trTotal', fmtBRL(total));
+}
+
+// Tax simulation listeners
+['simTribDestino','simTribRegime'].forEach(id => {
+  const e=$(id); if(e) { e.addEventListener('change', calcTribSimulation); }
+});
+
+// Vitrine filter listener
+const vfEl=$('vitrineFilter');
+if(vfEl) vfEl.addEventListener('change', renderVitrine);
+
+// Buy item
+if($('btnComprarItem')) {
+  $('btnComprarItem').addEventListener('click', () => {
+    if (!selectedVitrineItem || !currentUser) return;
+    const destino = $('simTribDestino')?.value || 'SP';
+    const regime = $('simTribRegime')?.value || 'lucro_real';
+    const icmsPct = destino === 'EX' ? 0 : (ICMS_UF[destino] || 0.18);
+    const pc = PIS_COFINS[regime];
+    const pcPct = destino === 'EX' ? 0 : pc.venda;
+    const tribTotal = selectedVitrineItem.preco * (icmsPct + pcPct + IPI);
+
+    // Register buy
+    const compras = DB.get('mkt_compras');
+    compras.push({
+      id: uid(),
+      data: new Date().toISOString().slice(0,10),
+      itemId: selectedVitrineItem.id,
+      tipo: selectedVitrineItem.tipo,
+      nome: selectedVitrineItem.nome,
+      vendedor: selectedVitrineItem.vendedor,
+      preco: selectedVitrineItem.preco,
+      tributacao: tribTotal,
+      comprador: currentUser.nome,
+      destino, regime
+    });
+    DB.set('mkt_compras', compras);
+
+    // Register sale for the seller
+    const mktVendas = DB.get('mkt_vendas');
+    mktVendas.push({
+      id: uid(),
+      data: new Date().toISOString().slice(0,10),
+      itemId: selectedVitrineItem.id,
+      tipo: selectedVitrineItem.tipo,
+      nome: selectedVitrineItem.nome,
+      comprador: currentUser.nome,
+      vendedor: selectedVitrineItem.vendedor,
+      preco: selectedVitrineItem.preco,
+      status: 'concluída'
+    });
+    DB.set('mkt_vendas', mktVendas);
+
+    // Save to export taxation history
+    const tribHist = DB.get('trib_history');
+    tribHist.push({
+      id: uid(),
+      data: new Date().toISOString().slice(0,10),
+      produto: selectedVitrineItem.nome,
+      destino: destino,
+      destinoLabel: destino === 'EX' ? 'Exportação' : destino,
+      precoBase: selectedVitrineItem.preco,
+      icms: selectedVitrineItem.preco * icmsPct,
+      pisCofins: selectedVitrineItem.preco * pcPct,
+      ipi: selectedVitrineItem.preco * IPI,
+      totalTributos: tribTotal,
+      totalComTributos: selectedVitrineItem.preco + tribTotal,
+      regime: regime === 'lucro_real' ? 'Lucro Real' : 'Lucro Presumido'
+    });
+    DB.set('trib_history', tribHist);
+
+    // Mark as sold
+    const mkt = DB.get('marketplace');
+    const idx = mkt.findIndex(i => i.id === selectedVitrineItem.id);
+    if (idx !== -1) { mkt[idx].status = 'vendido'; DB.set('marketplace', mkt); }
+
+    selectedVitrineItem = null;
+    $('simTribCard').style.display = 'none';
+    renderVitrine();
+    toast('Compra realizada com sucesso!');
+  });
+}
+
+/* ===== HOME: SMART RECOMMENDATIONS ===== */
+function renderRecommendations() {
+  const grid = $('recoGrid');
+  if (!grid) return;
+  const mats = DB.get('materiais');
+  const comps = DB.get('componentes');
+  const sims = DB.get('simulacoes');
+  const mkt = DB.get('marketplace').filter(i => i.status === 'disponivel');
+
+  const recos = [];
+
+  if (mats.length < 3) {
+    recos.push({
+      ico: '🧱',
+      title: 'Cadastrar mais Materiais',
+      desc: `Você tem apenas ${mats.length} material(is). Cadastre mais para diversificar a composição dos produtos.`,
+      action: "showSection('secMateriais')",
+      btnText: 'Ir para Materiais',
+      priority: 'high'
+    });
+  }
+
+  if (comps.length < 2) {
+    recos.push({
+      ico: '⚙️',
+      title: 'Cadastrar Componentes',
+      desc: `Você tem ${comps.length} componente(s). Adicione mais para montar produtos completos.`,
+      action: "showSection('secComponentes')",
+      btnText: 'Ir para Componentes',
+      priority: 'high'
+    });
+  }
+
+  if (sims.length === 0) {
+    recos.push({
+      ico: '📦',
+      title: 'Configure seu primeiro Produto',
+      desc: 'Nenhuma simulação realizada. Configure um produto e teste diferentes cenários de preço.',
+      action: "showSection('secProduto')",
+      btnText: 'Configurar Produto',
+      priority: 'medium'
+    });
+  }
+
+  if (mkt.length === 0 && (currentUser?.role === 'vendedor' || currentUser?.role === 'admin')) {
+    recos.push({
+      ico: '🏷️',
+      title: 'Publique itens à venda',
+      desc: 'O marketplace está vazio. Publique materiais, componentes ou produtos para atrair compradores.',
+      action: "showSection('secMarketplace')",
+      btnText: 'Ir ao Marketplace',
+      priority: 'medium'
+    });
+  }
+
+  if (mats.length >= 3 && comps.length >= 2 && sims.length > 0) {
+    recos.push({
+      ico: '✅',
+      title: 'Sistema bem configurado!',
+      desc: 'Seu sistema está funcionando com materiais, componentes e simulações. Continue monitorando pelo Dashboard.',
+      action: "showSection('secDashboard')",
+      btnText: 'Ver Dashboard',
+      priority: 'low'
+    });
+  }
+
+  if (mats.length > 0 && comps.length > 0 && sims.length === 0) {
+    recos.push({
+      ico: '🧮',
+      title: 'Realize uma Simulação',
+      desc: 'Você tem materiais e componentes cadastrados. Simule custos e preço de venda!',
+      action: "showSection('secSimulacao')",
+      btnText: 'Ir para Simulação',
+      priority: 'high'
+    });
+  }
+
+  const prioOrder = {high:0,medium:1,low:2};
+  recos.sort((a,b) => (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1));
+
+  grid.innerHTML = recos.slice(0,4).map(r => `
+    <div class="reco-card reco-${r.priority}">
+      <div class="reco-ico">${r.ico}</div>
+      <div class="reco-body">
+        <div class="reco-title">${r.title}</div>
+        <div class="reco-desc">${r.desc}</div>
+        <button class="btn btn-sm btn-outline reco-btn" onclick="${r.action}">${r.btnText} →</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ===== EXPORT TAXATION HISTORY ===== */
+let chartTribDestino = null, chartTribEvolucao = null;
+
+function renderTribHistory() {
+  const list = DB.get('trib_history');
+  const tb = $('tribHistBody');
+  if (!tb) return;
+
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="9"><div class="empty-state"><span class="empty-ico">🌍</span><p>Nenhum registro de tributação de exportação.</p></div></td></tr>';
+  } else {
+    tb.innerHTML = list.map(t => `<tr>
+      <td class="mono">${t.data}</td>
+      <td><strong>${t.produto}</strong></td>
+      <td>${t.destinoLabel}</td>
+      <td class="mono">${fmtBRL(t.precoBase)}</td>
+      <td class="mono text-orange">${fmtBRL(t.icms)}</td>
+      <td class="mono text-orange">${fmtBRL(t.pisCofins)}</td>
+      <td class="mono text-orange">${fmtBRL(t.ipi)}</td>
+      <td class="mono text-accent">${fmtBRL(t.totalComTributos)}</td>
+      <td>${t.regime}</td>
+    </tr>`).join('');
+  }
+
+  // Render taxation charts
+  renderTribCharts(list);
+}
+
+function renderTribCharts(list) {
+  // Chart 1: By destination (bar)
+  const ctx1 = $('chartTribDestino');
+  if(chartTribDestino) chartTribDestino.destroy();
+
+  const byDest = {};
+  list.forEach(t => {
+    if (!byDest[t.destinoLabel]) byDest[t.destinoLabel] = 0;
+    byDest[t.destinoLabel] += t.totalTributos;
+  });
+
+  chartTribDestino = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(byDest),
+      datasets: [{
+        label: 'Total Tributos (R$)',
+        data: Object.values(byDest),
+        backgroundColor: 'rgba(251,146,60,.6)',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.06)'}},
+        x: {ticks:{color:'#8b949e'},grid:{display:false}}
+      },
+      plugins: {legend:{labels:{color:'#8b949e'}}}
+    }
+  });
+
+  // Chart 2: Evolution (line)
+  const ctx2 = $('chartTribEvolucao');
+  if(chartTribEvolucao) chartTribEvolucao.destroy();
+
+  chartTribEvolucao = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: list.map(t => t.data),
+      datasets: [{
+        label: 'Tributos (R$)',
+        data: list.map(t => t.totalTributos),
+        borderColor: '#4f8ef7',
+        backgroundColor: 'rgba(79,142,247,.1)',
+        fill: true,
+        tension: .4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.06)'}},
+        x: {ticks:{color:'#8b949e'},grid:{display:false}}
+      },
+      plugins: {legend:{labels:{color:'#8b949e'}}}
+    }
+  });
+}
+
+// Export trb. history CSV
+if($('btnExportTribCSV')) {
+  $('btnExportTribCSV').addEventListener('click', () => {
+    const list = DB.get('trib_history');
+    if (!list.length) { toast('Nenhum registro para exportar.','error'); return; }
+    const header = 'Data,Produto,Destino,Preço Base,ICMS,PIS/COFINS,IPI,Total c/ Tributos,Regime';
+    const rows = list.map(t => `${t.data},"${t.produto}",${t.destinoLabel},${t.precoBase.toFixed(2)},${t.icms.toFixed(2)},${t.pisCofins.toFixed(2)},${t.ipi.toFixed(2)},${t.totalComTributos.toFixed(2)},${t.regime}`);
+    const csv = header + '\n' + rows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'historico_tributacao_exportacao.csv'; a.click();
+    URL.revokeObjectURL(url);
+    toast('CSV exportado com sucesso!');
+  });
+}
+
+/* ===== MARKETPLACE ===== */
+function renderMarketplace() {
+  renderMktMeusItens();
+  renderMktCompras();
+  renderMktVendas();
+}
+
+function renderMktMeusItens() {
+  const list = DB.get('marketplace').filter(i => i.vendedor === currentUser?.nome);
+  const tb = $('mktMeusItensBody');
+  if (!tb) return;
+
+  const tipoLabels = {material:'Material',componente:'Componente',produto:'Produto'};
+  const statusLabels = {disponivel:'🟢 Disponível',vendido:'🔴 Vendido'};
+
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-ico">🏷️</span><p>Nenhum item publicado. Clique em "Publicar Item" para começar.</p></div></td></tr>';
+    return;
+  }
+
+  tb.innerHTML = list.map(i => `<tr>
+    <td>${tipoLabels[i.tipo]||i.tipo}</td>
+    <td><strong>${i.nome}</strong></td>
+    <td style="max-width:200px;font-size:.82rem;color:var(--muted)">${i.descricao||'—'}</td>
+    <td class="mono text-accent">${fmtBRL(i.preco)}</td>
+    <td>${statusLabels[i.status]||i.status}</td>
+    <td><div class="actions">${i.status==='disponivel'?`<button class="btn-icon danger" onclick="delMktItem('${i.id}')">🗑️</button>`:''}</div></td>
+  </tr>`).join('');
+}
+
+function renderMktCompras() {
+  const list = DB.get('mkt_compras').filter(c => c.comprador === currentUser?.nome);
+  const tb = $('mktMinhasComprasBody');
+  if (!tb) return;
+  const tipoLabels = {material:'Material',componente:'Componente',produto:'Produto'};
+
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-ico">🛒</span><p>Nenhuma compra realizada.</p></div></td></tr>';
+    return;
+  }
+
+  tb.innerHTML = list.map(c => `<tr>
+    <td class="mono">${c.data}</td>
+    <td>${tipoLabels[c.tipo]||c.tipo}</td>
+    <td><strong>${c.nome}</strong></td>
+    <td>${c.vendedor}</td>
+    <td class="mono text-accent">${fmtBRL(c.preco)}</td>
+    <td class="mono text-orange">${fmtBRL(c.tributacao)}</td>
+  </tr>`).join('');
+}
+
+function renderMktVendas() {
+  const list = DB.get('mkt_vendas').filter(v => v.vendedor === currentUser?.nome);
+  const tb = $('mktMinhasVendasBody');
+  if (!tb) return;
+  const tipoLabels = {material:'Material',componente:'Componente',produto:'Produto'};
+
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-ico">💰</span><p>Nenhuma venda realizada.</p></div></td></tr>';
+    return;
+  }
+
+  tb.innerHTML = list.map(v => `<tr>
+    <td class="mono">${v.data}</td>
+    <td>${tipoLabels[v.tipo]||v.tipo}</td>
+    <td><strong>${v.nome}</strong></td>
+    <td>${v.comprador}</td>
+    <td class="mono text-accent">${fmtBRL(v.preco)}</td>
+    <td>✅ ${v.status}</td>
+  </tr>`).join('');
+}
+
+window.delMktItem = function(id) {
+  if (!confirm('Remover item do marketplace?')) return;
+  DB.set('marketplace', DB.get('marketplace').filter(i => i.id !== id));
+  renderMktMeusItens(); renderVitrine(); toast('Item removido.','info');
+};
+
+// Publish item
+if($('btnPublicarItem')) {
+  $('btnPublicarItem').addEventListener('click', () => {
+    openModal('Publicar Item para Venda', `
+      <div class="form-group"><label>Tipo do Item</label>
+        <select id="pubTipo">
+          <option value="material">Material</option>
+          <option value="componente">Componente</option>
+          <option value="produto">Produto</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Nome</label><input id="pubNome" type="text" placeholder="Nome do item"></div>
+      <div class="form-group"><label>Descrição</label><textarea id="pubDesc" placeholder="Descrição detalhada"></textarea></div>
+      <div class="form-group"><label>Preço de Venda (R$)</label><input id="pubPreco" type="number" step="0.01" min="0"></div>
+    `, () => {
+      const nome = $('pubNome').value.trim();
+      const preco = parseFloat($('pubPreco').value) || 0;
+      if (!nome) { toast('Informe o nome do item.','error'); return; }
+      if (preco <= 0) { toast('Informe um preço válido.','error'); return; }
+
+      const list = DB.get('marketplace');
+      list.push({
+        id: uid(),
+        tipo: $('pubTipo').value,
+        nome: nome,
+        descricao: $('pubDesc').value,
+        preco: preco,
+        vendedor: currentUser?.nome || 'Anônimo',
+        vendedorLogin: currentUser?.login || '',
+        status: 'disponivel',
+        dataPub: new Date().toISOString().slice(0,10)
+      });
+      DB.set('marketplace', list);
+      renderMktMeusItens(); renderVitrine(); closeModal(); toast('Item publicado com sucesso!');
+    });
+  });
+}
+
+/* ===== INIT DEFAULT MARKETPLACE ITEMS ===== */
+function initDefaultMarketplace() {
+  if (DB.get('marketplace').length === 0) {
+    DB.set('marketplace', [
+      {id:uid(),tipo:'material',nome:'Aço Carbono SAE 1020 (Lote 500kg)',descricao:'Baixo carbono, boa soldabilidade. Lote mínimo 500kg.',preco:4250,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-29'},
+      {id:uid(),tipo:'componente',nome:'Motor Elétrico Trifásico 50HP',descricao:'WEG, 1750RPM, alto rendimento.',preco:4500,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-29'},
+      {id:uid(),tipo:'produto',nome:'Compressor de Ar CP-50CV',descricao:'Compressor parafuso, 200L, pronto para uso.',preco:45000,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-28'},
+      {id:uid(),tipo:'material',nome:'Aço Inox AISI 304 (Chapa 2mm)',descricao:'Resistência à corrosão, chapas 1x2m.',preco:1400,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-28'},
+      {id:uid(),tipo:'componente',nome:'Reservatório de Ar 200L',descricao:'Pressão máxima 12bar, certificado NR-13.',preco:1800,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-27'},
+      {id:uid(),tipo:'produto',nome:'Bomba Hidráulica Centrífuga BH-30',descricao:'Vazão 30m³/h, motor acoplado, IP55.',preco:28000,vendedor:'Administrador',vendedorLogin:'admin',status:'disponivel',dataPub:'2026-03-27'}
+    ]);
+  }
+}
+initDefaultMarketplace();
