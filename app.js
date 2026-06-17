@@ -113,6 +113,22 @@ $('btnLogout').addEventListener('click', doLogout);
 document.addEventListener('click', resetSession);
 document.addEventListener('keydown', resetSession);
 
+/* ===== THEME (LIGHT/DARK) ===== */
+function initTheme() {
+  const saved = localStorage.getItem('st_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('st_theme', next);
+  if (currentUser) refreshDashboard(); // Redraw charts with new theme awareness if needed
+}
+const btnTheme = $('btnThemeToggle');
+if (btnTheme) btnTheme.addEventListener('click', toggleTheme);
+initTheme();
+
 /* ===== NAVIGATION ===== */
 function showSection(secId) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
@@ -633,13 +649,17 @@ function refreshDashboard() {
 }
 
 function renderCharts(sims) {
+  const getVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const textColor = getVar('--muted') || '#8b949e';
+  const gridColor = getVar('--border') || 'rgba(255,255,255,.06)';
+
   // Chart 1: Custo composition (doughnut)
   const ctx1=$('chartCusto');
   if(chartCusto) chartCusto.destroy();
   chartCusto=new Chart(ctx1,{
     type:'doughnut',
     data:{labels:['Materiais','MOD','CIF'],datasets:[{data:[cpvUnit.mat,cpvUnit.mod,cpvUnit.cif],backgroundColor:['#4f8ef7','#10b981','#f59e0b'],borderWidth:0}]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#8b949e',font:{family:'Inter'}}}}}
+    options:{responsive:true,plugins:{legend:{labels:{color:textColor,font:{family:'Inter'}}}}}
   });
 
   // Chart 2: Cenários (bar)
@@ -649,7 +669,14 @@ function renderCharts(sims) {
   chartCenarios=new Chart(ctx2,{
     type:'bar',
     data:{labels:last5.map(s=>s.nome?.substring(0,15)||'Sim'),datasets:[{label:'Margem Líq. %',data:last5.map(s=>s.margLiq||0),backgroundColor:'rgba(79,142,247,.6)',borderRadius:6}]},
-    options:{responsive:true,scales:{y:{ticks:{color:'#8b949e'},grid:{color:'rgba(255,255,255,.06)'}},x:{ticks:{color:'#8b949e'},grid:{display:false}}},plugins:{legend:{labels:{color:'#8b949e'}}}}
+    options:{
+      responsive:true,
+      scales:{
+        y:{ticks:{color:textColor},grid:{color:gridColor}},
+        x:{ticks:{color:textColor},grid:{display:false}}
+      },
+      plugins:{legend:{labels:{color:textColor}}}
+    }
   });
 }
 
