@@ -331,7 +331,7 @@
             <div class="card-top">
               <div>
                 <h3>Componentes Cadastrados</h3>
-                <p class="text-muted">Especificações, dimensões, material, custo e fornecedor.</p>
+                <p class="text-muted">Especificações, custo, fornecedor e tag de identificação.</p>
               </div>
               <button class="btn btn-primary" id="btnAddComponente">＋ Novo Componente</button>
             </div>
@@ -339,9 +339,9 @@
               <table class="data-table">
                 <thead>
                   <tr>
+                    <th>Tag</th>
                     <th>Nome</th>
                     <th>Especificação</th>
-                    <th>Material</th>
                     <th>Fornecedor</th>
                     <th>Custo Unit. (R$)</th>
                     <th style="text-align:right">Ações</th>
@@ -366,7 +366,7 @@
             <div class="card-top">
               <div>
                 <h3>Custos Cadastrados</h3>
-                <p class="text-muted">Mão de obra, energia, despesas administrativas, instalação, etc.</p>
+                <p class="text-muted">Mão de obra, energia, despesas administrativas, etc.</p>
               </div>
               <button class="btn btn-primary" id="btnAddCusto">＋ Novo Custo</button>
             </div>
@@ -375,12 +375,18 @@
                 <thead>
                   <tr>
                     <th>Descrição</th>
-                    <th>Categoria</th>
                     <th>Valor Mensal (R$)</th>
                     <th style="text-align:right">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="custosBody"></tbody>
+                <tfoot>
+                  <tr>
+                    <td class="ft-label"><strong>SOMA TOTAL</strong></td>
+                    <td class="ft-val text-accent mono" id="custosSomaTotal">R$ 0,00</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>
@@ -389,116 +395,25 @@
         <!-- ==================== PRODUTO (RF04, RF07) ==================== -->
         <section id="secProduto" class="page-section">
           <div class="page-hero">
-            <span class="page-hero-ico">📦</span>
+            <span class="page-hero-ico">💨</span>
             <div>
-              <h2>Configuração do Produto</h2>
-              <p class="text-muted">Selecione materiais/componentes e defina especificações técnicas (RF04, RF07).</p>
+              <h2>Configuração do Produto — Compressor de Ar</h2>
+              <p class="text-muted">Monte a composição de materiais e componentes do compressor (RF04).</p>
             </div>
           </div>
 
-          <div class="row-cols">
-            <div>
-              <div class="card mb-4">
-                <div class="section-label">FAMÍLIA DE EQUIPAMENTO</div>
-                <div class="product-grid">
-                  <label class="product-card">
-                    <input type="radio" name="equipamento" value="compressor" checked>
-                    <div class="pc-inner">
-                      <span class="pc-ico">💨</span>
-                      <strong>Compressor de Ar</strong>
-                      <p>Rotativo / Parafuso / Pistão</p>
-                    </div>
-                  </label>
-                  <label class="product-card">
-                    <input type="radio" name="equipamento" value="bomba">
-                    <div class="pc-inner">
-                      <span class="pc-ico">💧</span>
-                      <strong>Bomba Hidráulica</strong>
-                      <p>Centrífuga / Engrenagem</p>
-                    </div>
-                  </label>
-                  <label class="product-card">
-                    <input type="radio" name="equipamento" value="redutor">
-                    <div class="pc-inner">
-                      <span class="pc-ico">⚙️</span>
-                      <strong>Redutor de Velocidade</strong>
-                      <p>Caixa de engrenagens</p>
-                    </div>
-                  </label>
-                  <label class="product-card">
-                    <input type="radio" name="equipamento" value="trocador">
-                    <div class="pc-inner">
-                      <span class="pc-ico">🔁</span>
-                      <strong>Trocador de Calor</strong>
-                      <p>Casco e tubo / Placas</p>
-                    </div>
-                  </label>
-                  <label class="product-card">
-                    <input type="radio" name="equipamento" value="estrutura">
-                    <div class="pc-inner">
-                      <span class="pc-ico">🏗️</span>
-                      <strong>Estrutura Metálica</strong>
-                      <p>Treliças, suportes, mezaninos</p>
-                    </div>
-                  </label>
-                  <label class="product-card">
-                    <input type="radio" name="equipamento" value="robo">
-                    <div class="pc-inner">
-                      <span class="pc-ico">🦾</span>
-                      <strong>Braço Robótico</strong>
-                      <p>6 eixos, automação</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
+          <!-- Tabs: BOM | Materiais Cadastrados -->
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tabBOM">📦 Composição (BOM)</button>
+            <button class="tab-btn" data-tab="tabMatRef">🧱 Materiais Cadastrados</button>
+          </div>
 
-              <!-- BOM Table (RF04) -->
-              <div class="card">
-                <div class="card-top">
-                  <div>
-                    <h3>Composição do Produto (BOM)</h3>
-                    <p class="text-muted">Selecione os materiais e componentes para este produto (RF04).</p>
-                  </div>
-                  <button class="btn-outline-primary" id="btnAddItem">＋ Adicionar componente</button>
-                </div>
-                <div class="table-wrap mt-4">
-                  <table id="bomTable">
-                    <thead>
-                      <tr>
-                        <th>Tipo</th>
-                        <th>Especificação</th>
-                        <th>Material</th>
-                        <th>Origem</th>
-                        <th>Qtd.</th>
-                        <th>Peso/un (kg)</th>
-                        <th>Custo Unit. (R$)</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="bomBody"></tbody>
-                    <tfoot>
-                      <tr>
-                        <td colspan="5"></td>
-                        <td class="ft-label">Total kg:</td>
-                        <td class="ft-val" id="totalPeso">0 kg</td>
-                        <td></td>
-                      </tr>
-                      <tr>
-                        <td colspan="5"></td>
-                        <td class="ft-label">Custo Total:</td>
-                        <td class="ft-val text-accent" id="totalMat">R$ 0,00</td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div class="info-card sticky-info">
-                <div class="section-label">CONFIGURAÇÃO DE PRODUÇÃO (RF07)</div>
-                <div class="form-group mt-3">
+          <!-- TAB: BOM -->
+          <div id="tabBOM" class="tab-panel active">
+            <div class="card mb-4">
+              <div class="section-label">CONFIGURAÇÃO DE PRODUÇÃO (RF07)</div>
+              <div class="form-row mt-3">
+                <div class="form-group">
                   <label>Nome / Modelo</label>
                   <input type="text" id="nomeModelo" placeholder="Ex: CP-50CV Parafuso">
                 </div>
@@ -507,6 +422,8 @@
                   <input type="number" id="loteMensal" value="30" min="1">
                   <small>Rateio de custos fixos.</small>
                 </div>
+              </div>
+              <div class="form-row">
                 <div class="form-group">
                   <label>Complexidade</label>
                   <select id="complexidade">
@@ -519,6 +436,8 @@
                   <label>Capacidade do Reservatório (L)</label>
                   <input type="number" id="capReservatorio" value="200" min="0">
                 </div>
+              </div>
+              <div class="form-row">
                 <div class="form-group">
                   <label>Tipo de Motor</label>
                   <select id="tipoMotor">
@@ -539,6 +458,73 @@
                   </div>
                   <small id="volDisplay">Volume: 0,18 m³ — Peso estimado: 0 kg</small>
                 </div>
+              </div>
+            </div>
+
+            <!-- BOM Table (RF04) -->
+            <div class="card">
+              <div class="card-top">
+                <div>
+                  <h3>Composição do Produto (BOM)</h3>
+                  <p class="text-muted">Selecione os materiais e componentes para este produto (RF04).</p>
+                </div>
+                <button class="btn-outline-primary" id="btnAddItem">＋ Adicionar componente</button>
+              </div>
+              <div class="table-wrap mt-4">
+                <table id="bomTable">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Especificação</th>
+                      <th>Material</th>
+                      <th>Origem</th>
+                      <th>Qtd.</th>
+                      <th>Peso/un (kg)</th>
+                      <th>Custo Unit. (R$)</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="bomBody"></tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5"></td>
+                      <td class="ft-label">Total kg:</td>
+                      <td class="ft-val" id="totalPeso">0 kg</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td colspan="5"></td>
+                      <td class="ft-label">Custo Total:</td>
+                      <td class="ft-val text-accent" id="totalMat">R$ 0,00</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Materiais Cadastrados (consulta rápida) -->
+          <div id="tabMatRef" class="tab-panel">
+            <div class="card">
+              <div class="card-top">
+                <div>
+                  <h3>🧱 Materiais Cadastrados</h3>
+                  <p class="text-muted">Consulta rápida de materiais e suas especificações técnicas.</p>
+                </div>
+              </div>
+              <div class="data-table-wrap mt-4">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Tipo</th>
+                      <th>Características</th>
+                      <th>Custo/Kg (R$)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="matRefBody"></tbody>
+                </table>
               </div>
             </div>
           </div>

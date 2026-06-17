@@ -54,9 +54,9 @@ function initDefaults() {
   }
   if (DB.get('componentes').length === 0) {
     DB.set('componentes', [
-      {id:uid(),nome:'Motor Elétrico Trifásico',spec:'50HP 1750RPM',material:'Aço Carbono',fornecedor:'WEG',custo:4500},
-      {id:uid(),nome:'Reservatório de Ar 200L',spec:'Pressão máx 12bar',material:'Aço Carbono',fornecedor:'MetalAr',custo:1800},
-      {id:uid(),nome:'Unidade Compressora Parafuso',spec:'Rotação variável',material:'Ferro Fundido',fornecedor:'Atlas Copco',custo:8500}
+      {id:uid(),tag:'MTE-00001',nome:'Motor Elétrico Trifásico',spec:'50HP 1750RPM',fornecedor:'WEG',custo:4500},
+      {id:uid(),tag:'RSV-00001',nome:'Reservatório de Ar 200L',spec:'Pressão máx 12bar',fornecedor:'MetalAr',custo:1800},
+      {id:uid(),tag:'UCP-00001',nome:'Unidade Compressora Parafuso',spec:'Rotação variável',fornecedor:'Atlas Copco',custo:8500}
     ]);
   }
   if (DB.get('custos').length === 0) {
@@ -148,6 +148,7 @@ function showSection(secId) {
   if (secId === 'secDashboard') refreshDashboard();
   if (secId === 'secHome') refreshHome();
   if (secId === 'secHistTributacao') renderTribHistory();
+  if (secId === 'secProduto') renderMatRef();
   if (secId === 'secMarketplace') renderMarketplace();
   // close mobile sidebar
   $('sidebar').classList.remove('open');
@@ -156,6 +157,18 @@ function showSection(secId) {
 
 document.querySelectorAll('.nav-item').forEach(n => {
   n.addEventListener('click', () => showSection(n.dataset.section));
+});
+
+/* ===== TABS LOGIC ===== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const section = btn.closest('.page-section');
+    section.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    section.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = $(btn.dataset.tab);
+    if (panel) panel.classList.add('active');
+  });
 });
 $('btnHamburger').addEventListener('click', () => {
   $('sidebar').classList.toggle('open'); $('sidebarOverlay').classList.toggle('open');
@@ -226,26 +239,39 @@ $('btnAddMaterial').addEventListener('click', () => {
 });
 
 /* ===== CRUD: COMPONENTES (RF02, RF03) ===== */
+function gerarTag(nome) {
+  const prefixos = {
+    'motor':'MTE','reservat':'RSV','unidade':'UCP','compress':'CMP',
+    'valvula':'VLV','filtro':'FLT','tubula':'TUB','painel':'PNL'
+  };
+  const nl = nome.toLowerCase();
+  let pref = 'CMP';
+  for (const [k,v] of Object.entries(prefixos)) { if (nl.includes(k)) { pref = v; break; } }
+  const list = DB.get('componentes');
+  const existing = list.filter(c => (c.tag||'').startsWith(pref+'-')).length;
+  return `${pref}-${String(existing+1).padStart(5,'0')}`;
+}
 function renderComponentes() {
   const list = DB.get('componentes'), tb = $('componentesBody');
   if (!list.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty-state"><span class="empty-ico">⚙️</span><p>Nenhum componente cadastrado.</p></div></td></tr>'; return; }
   tb.innerHTML = list.map(c => `<tr>
-    <td><strong>${c.nome}</strong></td><td>${c.spec}</td><td>${c.material}</td><td>${c.fornecedor}</td>
+    <td><code class="comp-tag">${c.tag||'—'}</code></td>
+    <td><strong>${c.nome}</strong></td><td>${c.spec}</td><td>${c.fornecedor}</td>
     <td class="mono">${fmtBRL(c.custo)}</td>
     <td><div class="actions"><button class="btn-icon" onclick="editComp('${c.id}')">✏️</button><button class="btn-icon danger" onclick="delComp('${c.id}')">🗑️</button></div></td>
   </tr>`).join('');
 }
 function compForm(c={}) {
-  return `<div class="form-group"><label>Nome</label><input id="cNome" type="text" value="${c.nome||''}"></div>
+  return `<div class="form-group"><label>Tag (identificação)</label><input id="cTag" type="text" value="${c.tag||''}" placeholder="Ex: MTE-00001 (gerada automaticamente se vazio)"></div>
+  <div class="form-group"><label>Nome</label><input id="cNome" type="text" value="${c.nome||''}"></div>
   <div class="form-row"><div class="form-group"><label>Especificação</label><input id="cSpec" type="text" value="${c.spec||''}"></div>
-  <div class="form-group"><label>Material</label><input id="cMat" type="text" value="${c.material||''}"></div></div>
-  <div class="form-row"><div class="form-group"><label>Fornecedor</label><input id="cForn" type="text" value="${c.fornecedor||''}"></div>
-  <div class="form-group"><label>Custo Unitário (R$)</label><input id="cCusto" type="number" step="0.01" value="${c.custo||0}"></div></div>`;
+  <div class="form-group"><label>Fornecedor</label><input id="cForn" type="text" value="${c.fornecedor||''}"></div></div>
+  <div class="form-group"><label>Custo Unitário (R$)</label><input id="cCusto" type="number" step="0.01" value="${c.custo||0}"></div>`;
 }
 window.editComp = function(id) {
   const list = DB.get('componentes'), c = list.find(x=>x.id===id);
   openModal('Editar Componente', compForm(c), () => {
-    c.nome=$('cNome').value; c.spec=$('cSpec').value; c.material=$('cMat').value; c.fornecedor=$('cForn').value; c.custo=parseFloat($('cCusto').value)||0;
+    c.tag=$('cTag').value||c.tag; c.nome=$('cNome').value; c.spec=$('cSpec').value; c.fornecedor=$('cForn').value; c.custo=parseFloat($('cCusto').value)||0;
     DB.set('componentes',list); renderComponentes(); closeModal(); toast('Componente atualizado!');
   });
 };
@@ -255,8 +281,10 @@ window.delComp = function(id) {
 };
 $('btnAddComponente').addEventListener('click', () => {
   openModal('Novo Componente', compForm(), () => {
+    const nome = $('cNome').value;
+    const tag = $('cTag').value || gerarTag(nome);
     const list = DB.get('componentes');
-    list.push({id:uid(),nome:$('cNome').value,spec:$('cSpec').value,material:$('cMat').value,fornecedor:$('cForn').value,custo:parseFloat($('cCusto').value)||0});
+    list.push({id:uid(),tag,nome,spec:$('cSpec').value,fornecedor:$('cForn').value,custo:parseFloat($('cCusto').value)||0});
     DB.set('componentes',list); renderComponentes(); closeModal(); toast('Componente cadastrado!');
   });
 });
@@ -264,24 +292,22 @@ $('btnAddComponente').addEventListener('click', () => {
 /* ===== CRUD: CUSTOS OPERACIONAIS (RF05, RF06) ===== */
 function renderCustos() {
   const list = DB.get('custos'), tb = $('custosBody');
-  const cats = {mod:'Mão de Obra Direta',moi:'Mão de Obra Indireta',energia:'Energia Elétrica',admin:'Desp. Administrativas',instalacao:'Instalação/Montagem',outros:'Outros'};
-  if (!list.length) { tb.innerHTML = '<tr><td colspan="4"><div class="empty-state"><span class="empty-ico">💵</span><p>Nenhum custo registrado.</p></div></td></tr>'; return; }
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="3"><div class="empty-state"><span class="empty-ico">💵</span><p>Nenhum custo registrado.</p></div></td></tr>'; setText('custosSomaTotal', fmtBRL(0)); return; }
   tb.innerHTML = list.map(c => `<tr>
-    <td><strong>${c.desc}</strong></td><td>${cats[c.cat]||c.cat}</td><td class="mono">${fmtBRL(c.valor)}</td>
+    <td><strong>${c.desc}</strong></td><td class="mono">${fmtBRL(c.valor)}</td>
     <td><div class="actions"><button class="btn-icon" onclick="editCusto('${c.id}')">✏️</button><button class="btn-icon danger" onclick="delCusto('${c.id}')">🗑️</button></div></td>
   </tr>`).join('');
+  const total = list.reduce((s,c) => s + (c.valor||0), 0);
+  setText('custosSomaTotal', fmtBRL(total));
 }
 function custoForm(c={}) {
-  const cats = ['mod','moi','energia','admin','instalacao','outros'];
-  const labels = {mod:'Mão de Obra Direta',moi:'Mão de Obra Indireta',energia:'Energia Elétrica',admin:'Desp. Administrativas',instalacao:'Instalação/Montagem',outros:'Outros'};
   return `<div class="form-group"><label>Descrição</label><input id="ctDesc" type="text" value="${c.desc||''}"></div>
-  <div class="form-row"><div class="form-group"><label>Categoria</label><select id="ctCat">${cats.map(k=>`<option value="${k}" ${c.cat===k?'selected':''}>${labels[k]}</option>`).join('')}</select></div>
-  <div class="form-group"><label>Valor Mensal (R$)</label><input id="ctVal" type="number" step="0.01" value="${c.valor||0}"></div></div>`;
+  <div class="form-group"><label>Valor Mensal (R$)</label><input id="ctVal" type="number" step="0.01" value="${c.valor||0}"></div>`;
 }
 window.editCusto = function(id) {
   const list = DB.get('custos'), c = list.find(x=>x.id===id);
   openModal('Editar Custo', custoForm(c), () => {
-    c.desc=$('ctDesc').value; c.cat=$('ctCat').value; c.valor=parseFloat($('ctVal').value)||0;
+    c.desc=$('ctDesc').value; c.valor=parseFloat($('ctVal').value)||0;
     DB.set('custos',list); renderCustos(); closeModal(); toast('Custo atualizado!');
   });
 };
@@ -292,10 +318,22 @@ window.delCusto = function(id) {
 $('btnAddCusto').addEventListener('click', () => {
   openModal('Novo Custo Operacional', custoForm(), () => {
     const list = DB.get('custos');
-    list.push({id:uid(),desc:$('ctDesc').value,cat:$('ctCat').value,valor:parseFloat($('ctVal').value)||0});
+    list.push({id:uid(),desc:$('ctDesc').value,cat:'outros',valor:parseFloat($('ctVal').value)||0});
     DB.set('custos',list); renderCustos(); closeModal(); toast('Custo cadastrado!');
   });
 });
+
+/* ===== MATERIAL REFERENCE TAB ===== */
+function renderMatRef() {
+  const list = DB.get('materiais'), tb = $('matRefBody');
+  if (!tb) return;
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="4"><div class="empty-state"><span class="empty-ico">🧱</span><p>Nenhum material cadastrado.</p></div></td></tr>'; return; }
+  tb.innerHTML = list.map(m => `<tr>
+    <td><strong>${m.nome}</strong></td><td>${m.tipo}</td>
+    <td style="max-width:200px;font-size:.82rem;color:var(--muted)">${m.caract}</td>
+    <td class="mono">${fmtBRL(m.custoKg)}</td>
+  </tr>`).join('');
+}
 
 /* ===== BOM (RF04) ===== */
 function getMaterialsMap() {
@@ -487,8 +525,7 @@ $('btnCompararCenarios').addEventListener('click', () => {
 function gerarRelatorio() {
   atualizarSimulador();
   const d=simData, lote=parseInt($('loteMensal').value)||1;
-  const radEquip=document.querySelector('input[name="equipamento"]:checked');
-  const equipLabel=radEquip?radEquip.closest('.product-card').querySelector('strong').textContent:'—';
+  const equipLabel='Compressor de Ar';
   const modelo=$('nomeModelo').value||'—';
   setText('relNomeProd',equipLabel+(modelo!=='—'?' · '+modelo:'')); setText('relData',new Date().toLocaleDateString('pt-BR'));
   setText('relRegime',d.regime==='lucro_real'?'Lucro Real':'Lucro Presumido');
@@ -684,6 +721,7 @@ function renderCharts(sims) {
 function initApp() {
   initDefaults();
   renderMateriais(); renderComponentes(); renderCustos(); renderVendas(); renderHistorico();
+  renderMatRef();
   atualizarCPVPreview(); atualizarHints();
   refreshDashboard();
   refreshHome();
@@ -1204,11 +1242,11 @@ function initDefaultMarketplace() {
   if (DB.get('marketplace').length === 0) {
     DB.set('marketplace', [
       {id:uid(),tipo:'material',nome:'Aço Carbono SAE 1020 (Lote 500kg)',descricao:'Baixo carbono, boa soldabilidade. Lote mínimo 500kg.',preco:4250,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-29'},
-      {id:uid(),tipo:'componente',nome:'Motor Elétrico Trifásico 50HP',descricao:'WEG, 1750RPM, alto rendimento.',preco:4500,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-29'},
-      {id:uid(),tipo:'produto',nome:'Compressor de Ar CP-50CV',descricao:'Compressor parafuso, 200L, pronto para uso.',preco:45000,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-28'},
-      {id:uid(),tipo:'material',nome:'Aço Inox AISI 304 (Chapa 2mm)',descricao:'Resistência à corrosão, chapas 1x2m.',preco:1400,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-28'},
-      {id:uid(),tipo:'componente',nome:'Reservatório de Ar 200L',descricao:'Pressão máxima 12bar, certificado NR-13.',preco:1800,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-27'},
-      {id:uid(),tipo:'produto',nome:'Bomba Hidráulica Centrífuga BH-30',descricao:'Vazão 30m³/h, motor acoplado, IP55.',preco:28000,vendedor:'Administrador',vendedorLogin:'admin',status:'disponivel',dataPub:'2026-03-27'}
+      {id:uid(),tipo:'componente',nome:'Motor Elétrico 50HP 1750RPM — MTE-00001',descricao:'WEG, 1750RPM, alto rendimento.',preco:4500,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-29'},
+      {id:uid(),tipo:'produto',nome:'Compressor de Ar CP-50CV Parafuso',descricao:'Compressor parafuso, 200L, pronto para uso.',preco:48500,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-28'},
+      {id:uid(),tipo:'componente',nome:'Filtro Coalescente Profissional',descricao:'Remoção de partículas e óleo em sistemas de ar comprimido.',preco:950,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-28'},
+      {id:uid(),tipo:'componente',nome:'Reservatório de Ar 200L — RSV-00001',descricao:'Pressão máxima 12bar, certificado NR-13.',preco:1800,vendedor:'Vendedor',vendedorLogin:'vendedor',status:'disponivel',dataPub:'2026-03-27'},
+      {id:uid(),tipo:'componente',nome:'Unidade Compressora Parafuso — UCP-00001',descricao:'Elemento de compressão premium para alta performance.',preco:12500,vendedor:'Administrador',vendedorLogin:'admin',status:'disponivel',dataPub:'2026-03-27'}
     ]);
   }
 }
