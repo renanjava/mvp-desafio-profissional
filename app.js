@@ -18,10 +18,10 @@ const USERS = [
 const ICMS_UF = {
   AC:.17,AL:.19,AP:.18,AM:.20,BA:.205,CE:.20,DF:.20,ES:.17,GO:.19,MA:.22,
   MT:.17,MS:.17,MG:.18,PA:.19,PB:.20,PR:.195,PE:.205,PI:.21,RJ:.22,RN:.20,
-  RS:.17,RO:.195,RR:.20,SC:.17,SP:.18,SE:.19,TO:.20,EX:0
+  RS:.17,RO:.195,RR:.20,SC:.12,SP:.12,SE:.19,TO:.20,EX:0
 };
-const PIS_COFINS = { lucro_real:{venda:.0925,credito:.0925}, lucro_presumido:{venda:.0365,credito:0} };
-const IRPJ_CSLL_LR = .34, IRPJ_CSLL_LP = .0308, IPI = .05, ENCARGOS = 1.65, MULT_IMP = 1.55;
+const PIS_COFINS = { lucro_real:{venda:.0925,credito:.0925} };
+const IRPJ_CSLL_LR = .34, IPI = .05, ENCARGOS = 1.65, MULT_IMP = 1.55;
 const MOD_RATES = { usinagem:{base:45}, solda:{base:55}, montagem:{base:35} };
 
 let currentUser = null, sessionTimer = null, sessionSeconds = 300;
